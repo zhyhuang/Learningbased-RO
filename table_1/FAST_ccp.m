@@ -4,10 +4,10 @@ function [x_FAST] = FAST_ccp(dataset_1,dataset_2,c,b,x_0)
 % Provide solution for minimize c'x s.t. a'x <= b with two datasets for a
 % and an initial solution x_0.
     c_t=c';
-    m=length(c);
+    d=length(c);
     
     cvx_begin
-        variable x_1(m)
+        variable x_1(d)
         minimize c_t*x_1
         subject to
             dataset_1*x_1 <= b
@@ -24,7 +24,7 @@ function [x_FAST] = FAST_ccp(dataset_1,dataset_2,c,b,x_0)
         cvx_end
         x_FAST=(1-alpha_x)*x_1  + alpha_x*x_0;
     else
-        x_FAST=nan(m,1);
+        x_FAST=nan(d,1);
     end
 end
 
