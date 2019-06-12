@@ -1,0 +1,3 @@
+In each folder, main.m reproduces the numerical experiments appearred in our paper draft. 
+
+For the DRO with KL divergence approach, we provide a function DRO_KL_new_epsilon.m that returns adjusted epsilon. 
