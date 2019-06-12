@@ -1,3 +1,4 @@
+clear
     d=100;                 % dimension
     m=1;                 % number of constraints
     N_data=120;          % sample size
@@ -13,7 +14,7 @@
     b=  [1200];
 
     % parameters for data 
-    miu_0=A;
+    mu_0=A;
 
     % setting for RO and Recon
     B_2=60;              % phase II budget
@@ -46,7 +47,7 @@
     time_mo_dro=zeros(n_outer,1);
 
     for i=1:n_outer
-       dataset=mvnrnd(miu_0,sigma,N_data);
+       dataset=mvnrnd(mu_0,sigma,N_data);
         
        %% FAST
        tic 
@@ -54,14 +55,14 @@
        dataset_fast_2=dataset(N1_fast+1:end,:);
        [x_FAST] = FAST_ccp(dataset_fast_1,dataset_fast_2,c,b,x_fast_0);
        time_fast(i)=toc;
-       fv_fast(i)=c_t*x_FAST;
+       fv_fast(i)=c'*x_FAST;
        violation_fast(i)=1-normcdf((b-A*x_FAST)/norm(sqrtm(sigma)*x_FAST));
        %% SG
        tic
        A_gen=reshape(dataset',A_c,N_data*A_r)';
        [x_SG]=SG_ccp(A_gen,c,b);
        time_sg(i)=toc;
-       fv_sg(i)=c_t*x_SG;
+       fv_sg(i)=c'*x_SG;
        violation_sg(i)=1-normcdf((b-A*x_SG)/norm(sqrtm(sigma)*x_SG));
        %% RO
        tic
@@ -69,7 +70,7 @@
        dataset_ro_2=dataset(B_1+1:end,:);
        [x_RO] = RO_ccp(dataset_ro_1,dataset_ro_2,rank_of_data+1,c,b);
        time_ro(i)=toc;
-       fv_ro(i)=c_t*x_RO;
+       fv_ro(i)=c'*x_RO;
        violation_ro(i)=1-normcdf((b-A*x_RO)/norm(sqrtm(sigma)*x_RO));
        %% Reconstructed RO
        tic
@@ -77,24 +78,24 @@
        dataset_recon_2=dataset(B_1+1:end,:);
        [x_Recon] = Recon_ccp(dataset_recon_1,dataset_recon_2,rank_of_data_p1+1,rank_of_data+1,c,b);
        time_recon(i)=toc;
-       fv_recon(i)=c_t*x_Recon;
+       fv_recon(i)=c'*x_Recon;
        violation_recon(i)=1-normcdf((b-A*x_Recon)/norm(sqrtm(sigma)*x_Recon));
        %% Moment-based DRO
        tic
-        [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta)
+        [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta);
         time_mo_dro(i)=toc;
-        fv_mo_dro(i)=c_t*x_mo_DRO;
+        fv_mo_dro(i)=c'*x_mo_DRO;
         violation_mo_dro(i)=1-normcdf((b-A*x_mo_DRO)/norm(sqrtm(sigma)*x_mo_DRO));
     end
     % Safe Convex Approximation
-    [x_SCA] = SCA_ccp(c,b,mu,sigma,epsilon)
+    [x_SCA] = SCA_ccp(c,b,mu_0,sigma,epsilon);
     fv_sca=c'*x_SCA;
     violation_sca=1-normcdf((b-A*x_SCA)/norm(sqrtm(sigma)*x_SCA));
     
     % ture solution
     phi_quantile=norminv(1-epsilon,0,1);
     rt_sigma=sqrtm(sigma);     
-    [x_true] =cvx_closed_one_line(c,phi_quantile,rt_sigma,miu_0,b);
+    [x_true] =cvx_closed_one_line(c,phi_quantile,rt_sigma,mu_0,b);
     fv_true=c'*x_true;
     
     result_table=cell(7,7);

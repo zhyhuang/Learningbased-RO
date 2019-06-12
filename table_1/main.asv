@@ -1,14 +1,14 @@
 clear
-    d=100;                 % dimension
+    d=11;                 % dimension
     m=1;                 % number of constraints
-    N_data=2331;          % sample size
+    N_data=120;          % sample size
     n_outer=1000;        % outer test size
     delta=0.05;
     epsilon=0.05;
 
     rng(123)
     % LP setting
-    load('c_sigma_100.mat') % d11 in paper
+    load('c_sigma_for_11.mat') % d11 in paper
     A=-c'; %
     [A_r A_c]=size(A);
     b=  [1200];
@@ -17,14 +17,14 @@ clear
     mu_0=A;
 
     % setting for RO and Recon
-    B_2=1013;              % phase II budget
+    B_2=60;              % phase II budget
     B_1=N_data-B_2;      % phase I budget
     rank_of_data=binoinv(1-delta,B_2,1-epsilon); % estimated quantile
     rank_of_data_p1=binoinv(1-delta,B_1,1-epsilon); % estimated quantile for recon phase 1
 
     % setting for FAST
-    N1_fast=2326;
-    N2_fast=N_data-N1_fast;
+    N1_fast=61;
+    N2_fast=59;
     x_fast_0=zeros(d,1);
 
     % result record
@@ -113,5 +113,6 @@ clear
     disp(fv_true)
     
     computation_time=[mean(time_ro),mean(time_recon),mean(time_sg),mean(time_fast),mean(time_mo_dro)];
-    disp('Average Computation Time')
+    disp('Average Computation Time for ')
+    disp('RO Recon SG FAST DRO_Mo')
     disp(computation_time)
