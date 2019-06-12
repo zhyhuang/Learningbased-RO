@@ -1,4 +1,4 @@
-    d=11;                 % dimension
+    d=100;                 % dimension
     m=1;                 % number of constraints
     N_data=120;          % sample size
     n_outer=1000;        % outer test size
@@ -7,7 +7,7 @@
 
     rng(123)
     % LP setting
-    load('c_sigma_for_11.mat') % d11 in paper
+    load('c_sigma_100.mat') % d11 in paper
     A=-c'; %
     [A_r A_c]=size(A);
     b=  [1200];

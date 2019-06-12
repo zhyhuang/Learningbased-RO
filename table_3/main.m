@@ -1,6 +1,6 @@
     d=11;                 % dimension
     m=1;                 % number of constraints
-    N_data=120;          % sample size
+    N_data=336;          % sample size
     n_outer=1000;        % outer test size
     delta=0.05;
     epsilon=0.05;
@@ -16,14 +16,14 @@
     miu_0=A;
 
     % setting for RO and Recon
-    B_2=60;              % phase II budget
+    B_2=124;              % phase II budget
     B_1=N_data-B_2;      % phase I budget
     rank_of_data=binoinv(1-delta,B_2,1-epsilon); % estimated quantile
     rank_of_data_p1=binoinv(1-delta,B_1,1-epsilon); % estimated quantile for recon phase 1
 
     % setting for FAST
-    N1_fast=61;
-    N2_fast=59;
+    N1_fast=318;
+    N2_fast=N_data-N1_fast;
     x_fast_0=zeros(d,1);
 
     % result record
