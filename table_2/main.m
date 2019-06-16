@@ -81,11 +81,11 @@ clear
        fv_recon(i)=c'*x_Recon;
        violation_recon(i)=1-normcdf((b-A*x_Recon)/norm(sqrtm(sigma)*x_Recon));
        %% Moment-based DRO
-       tic
-        [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta);
-        time_mo_dro(i)=toc;
-        fv_mo_dro(i)=c'*x_mo_DRO;
-        violation_mo_dro(i)=1-normcdf((b-A*x_mo_DRO)/norm(sqrtm(sigma)*x_mo_DRO));
+%        tic
+%         [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta);
+%         time_mo_dro(i)=toc;
+%         fv_mo_dro(i)=c'*x_mo_DRO;
+%         violation_mo_dro(i)=1-normcdf((b-A*x_mo_DRO)/norm(sqrtm(sigma)*x_mo_DRO));
     end
     % Safe Convex Approximation
     [x_SCA] = SCA_ccp(c,b,mu_0,sigma,epsilon);
@@ -113,5 +113,5 @@ clear
     disp(fv_true)
     
     computation_time=[mean(time_ro),mean(time_recon),mean(time_sg),mean(time_fast),mean(time_mo_dro)];
-    disp('Average Computation Time')
+    disp('Average Computation Time for RO,Recon,SG,FAST,DRO_Mo:')
     disp(computation_time)

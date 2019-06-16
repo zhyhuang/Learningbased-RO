@@ -1,5 +1,5 @@
 clear  
-    d=10;                 % dimension
+    d=11;                 % dimension
     m=1;                 % number of constraints
     N_data=120;          % sample size
     n_outer=1000;        % outer test size
@@ -7,20 +7,27 @@ clear
     delta=0.05;
     epsilon=0.05;
 
-    rng(10)
+    rng(123)
     % LP setting
-    c=-20*(ones(d,1)+randn(d,1));
+    load('c_sigma_for_11.mat') % d11 in paper
+    c=-1*(rand(d,1));
+    sigma=sigma/100;
     A=-c'; %
     [A_r A_c]=size(A);
     b=  [1200];
 
     % parameters for data 
-    L=10;
-    A_l=[eye(d)*1.5+rand(d)-0.5; rand(L-d,d)]*10;
     mu_0=A;
-    beta_dist_a=10;
-    beta_dist_b=10;
-
+    real_mean=exp(mu_0+1/2 * diag(sigma)');
+%     cov_mat=zeros(d);
+%     for i=1:d
+%         for j=1:d
+%              cov_mat(i,j)=exp(mu_0(i)+mu_0(j)+1/2*(sigma(i,i)+sigma(j,j)))*(exp(sigma(i,j))-1);
+% 
+%         end
+%     end
+    c=-real_mean';
+    
     % setting for RO and Recon
     B_2=60;              % phase II budget
     B_1=N_data-B_2;      % phase I budget
@@ -53,18 +60,7 @@ clear
 
     for i=1:n_outer
        
-        beta_rnd=betarnd(beta_dist_a,beta_dist_b,N_data,L)*2-1;
-
-        al_mat=zeros(N_data,d,L);
-            for l_i=1:L
-
-                al_mat(:,:,l_i)=beta_rnd(:,l_i)*A_l(l_i,:);
-
-            end
-
-        al_sum=sum(al_mat,3);
-        A_mat=repmat(A,N_data,1);
-        dataset=A_mat+al_sum;
+        dataset=exp(mvnrnd(mu_0,sigma,N_data));
         
        %% FAST
        tic 
@@ -105,14 +101,7 @@ clear
         
         
         %% violation test
-        test_beta_rnd=betarnd(beta_dist_a,beta_dist_b,N_test_data,L)*2-1;
-        test_al_mat=zeros(N_test_data,d,L);
-        for test_l_i=1:L
-            test_al_mat(:,:,test_l_i)=test_beta_rnd(:,test_l_i)*A_l(test_l_i,:);
-        end
-        test_al_sum=sum(test_al_mat,3);
-        test_A_mat=repmat(A,N_test_data,1);
-        test_data=test_A_mat+test_al_sum;
+        test_data=exp(mvnrnd(mu_0,sigma,N_test_data));
         
         violate_num_sg=0;
         violate_num_recon=0;
@@ -135,25 +124,16 @@ clear
         violation_recon(i)=violate_num_recon/N_test_data;
         violation_mo_dro(i)=violate_num_mo_dro/N_test_data;
     end
-    % Safe Convex Approximation
-    [x_SCA] = SCA_ccp(c,b,mu_0,A_l,epsilon);
-    fv_sca=c'*x_SCA;
-    violate_num_sca=0;
-    for j=1:N_test_data
-               A_test=reshape(test_data(j,:),A1_c,A1_r)';
-               violate_num_sca=violate_num_sca+(sum(A_test*x_SCA-b >= 0)>0);
-    end
-    violation_sca=violate_num_sca/N_test_data;
-    
+   
   
-    result_table=cell(7,7);
-    result_table(1,:)={'','RO','Recon','SG','FAST','DRO Mo','SCA'};
-    result_table(2,:)={'n',N_data,N_data,N_data,N_data,N_data,'-'};
-    result_table(3,:)={'n1',B_1,B_1,'-',N1_fast,'-','-'};
-    result_table(4,:)={'n2',B_2,B_2,'-',N2_fast,'-','-'};
-    result_table(5,:)={'ov',mean(fv_ro),mean(fv_recon),mean(fv_sg),mean(fv_fast),mean(fv_mo_dro),fv_sca};
-    result_table(6,:)={'eps',mean(violation_ro),mean(violation_recon),mean(violation_sg),mean(violation_fast),mean(violation_mo_dro),violation_sca};
-    result_table(7,:)={'delta',sum(violation_ro>delta)/n_outer,sum(violation_recon>delta)/n_outer,sum(violation_sg>delta)/n_outer,sum(violation_fast>delta)/n_outer,sum(violation_mo_dro>delta)/n_outer,0};
+    result_table=cell(7,6);
+    result_table(1,:)={'','RO','Recon','SG','FAST','DRO Mo'};
+    result_table(2,:)={'n',N_data,N_data,N_data,N_data,N_data};
+    result_table(3,:)={'n1',B_1,B_1,'-',N1_fast,'-'};
+    result_table(4,:)={'n2',B_2,B_2,'-',N2_fast,'-'};
+    result_table(5,:)={'ov',mean(fv_ro),mean(fv_recon),mean(fv_sg),mean(fv_fast),mean(fv_mo_dro)};
+    result_table(6,:)={'eps',mean(violation_ro),mean(violation_recon),mean(violation_sg),mean(violation_fast),mean(violation_mo_dro)};
+    result_table(7,:)={'delta',sum(violation_ro>delta)/n_outer,sum(violation_recon>delta)/n_outer,sum(violation_sg>delta)/n_outer,sum(violation_fast>delta)/n_outer,sum(violation_mo_dro>delta)/n_outer};
     disp('Results')
     disp(result_table)
         

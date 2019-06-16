@@ -1,5 +1,5 @@
 clear  
-    d=10;                 % dimension
+    d=100;                 % dimension
     m=1;                 % number of constraints
     N_data=120;          % sample size
     n_outer=1000;        % outer test size
@@ -7,19 +7,19 @@ clear
     delta=0.05;
     epsilon=0.05;
 
-    rng(10)
+    rng(123)
     % LP setting
-    c=-20*(ones(d,1)+randn(d,1));
+    load('c_sigma_100.mat') % d11 in paper
     A=-c'; %
     [A_r A_c]=size(A);
     b=  [1200];
 
     % parameters for data 
-    L=10;
-    A_l=[eye(d)*1.5+rand(d)-0.5; rand(L-d,d)]*10;
     mu_0=A;
-    beta_dist_a=10;
-    beta_dist_b=10;
+    [Cor_r,std_sigma]=corrcov(sigma+eye(d)*100); 
+    nu_t=5;
+    cov_mat=nu_t/(nu_t-2)*Cor_r;
+    real_mean=mu_0;
 
     % setting for RO and Recon
     B_2=60;              % phase II budget
@@ -53,18 +53,7 @@ clear
 
     for i=1:n_outer
        
-        beta_rnd=betarnd(beta_dist_a,beta_dist_b,N_data,L)*2-1;
-
-        al_mat=zeros(N_data,d,L);
-            for l_i=1:L
-
-                al_mat(:,:,l_i)=beta_rnd(:,l_i)*A_l(l_i,:);
-
-            end
-
-        al_sum=sum(al_mat,3);
-        A_mat=repmat(A,N_data,1);
-        dataset=A_mat+al_sum;
+        dataset=mvtrnd(Cor_r,nu_t,N_data)+repmat(mu_0,N_data,1);
         
        %% FAST
        tic 
@@ -98,21 +87,13 @@ clear
        fv_recon(i)=c'*x_Recon;
        
        %% Moment-based DRO
-       tic
-        [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta);
-        time_mo_dro(i)=toc;
-        fv_mo_dro(i)=c'*x_mo_DRO;
-        
+%        tic
+%         [x_mo_DRO] = moment_DRO_ccp(dataset,c,b,epsilon,delta);
+%         time_mo_dro(i)=toc;
+%         fv_mo_dro(i)=c'*x_mo_DRO;
         
         %% violation test
-        test_beta_rnd=betarnd(beta_dist_a,beta_dist_b,N_test_data,L)*2-1;
-        test_al_mat=zeros(N_test_data,d,L);
-        for test_l_i=1:L
-            test_al_mat(:,:,test_l_i)=test_beta_rnd(:,test_l_i)*A_l(test_l_i,:);
-        end
-        test_al_sum=sum(test_al_mat,3);
-        test_A_mat=repmat(A,N_test_data,1);
-        test_data=test_A_mat+test_al_sum;
+        test_data=mvtrnd(Cor_r,nu_t,N_test_data)+repmat(mu_0,N_test_data,1);
         
         violate_num_sg=0;
         violate_num_recon=0;
@@ -125,7 +106,7 @@ clear
            violate_num_sg=violate_num_sg+(sum(A_test*x_SG-b >= 0)>0);
            violate_num_recon=violate_num_recon+(sum(A_test*x_Recon-b >= 0)>0);
            violate_num_ro=violate_num_ro+(sum(A_test*x_RO-b >= 0)>0);
-           violate_num_mo_dro=violate_num_mo_dro+(sum(A_test*x_mo_DRO-b >= 0)>0);
+%            violate_num_mo_dro=violate_num_mo_dro+(sum(A_test*x_mo_DRO-b >= 0)>0);
            violate_num_fast=violate_num_fast+(sum(A_test*x_FAST-b >= 0)>0);
         end
        
@@ -135,25 +116,16 @@ clear
         violation_recon(i)=violate_num_recon/N_test_data;
         violation_mo_dro(i)=violate_num_mo_dro/N_test_data;
     end
-    % Safe Convex Approximation
-    [x_SCA] = SCA_ccp(c,b,mu_0,A_l,epsilon);
-    fv_sca=c'*x_SCA;
-    violate_num_sca=0;
-    for j=1:N_test_data
-               A_test=reshape(test_data(j,:),A1_c,A1_r)';
-               violate_num_sca=violate_num_sca+(sum(A_test*x_SCA-b >= 0)>0);
-    end
-    violation_sca=violate_num_sca/N_test_data;
-    
+   
   
-    result_table=cell(7,7);
-    result_table(1,:)={'','RO','Recon','SG','FAST','DRO Mo','SCA'};
-    result_table(2,:)={'n',N_data,N_data,N_data,N_data,N_data,'-'};
-    result_table(3,:)={'n1',B_1,B_1,'-',N1_fast,'-','-'};
-    result_table(4,:)={'n2',B_2,B_2,'-',N2_fast,'-','-'};
-    result_table(5,:)={'ov',mean(fv_ro),mean(fv_recon),mean(fv_sg),mean(fv_fast),mean(fv_mo_dro),fv_sca};
-    result_table(6,:)={'eps',mean(violation_ro),mean(violation_recon),mean(violation_sg),mean(violation_fast),mean(violation_mo_dro),violation_sca};
-    result_table(7,:)={'delta',sum(violation_ro>delta)/n_outer,sum(violation_recon>delta)/n_outer,sum(violation_sg>delta)/n_outer,sum(violation_fast>delta)/n_outer,sum(violation_mo_dro>delta)/n_outer,0};
+    result_table=cell(7,6);
+    result_table(1,:)={'','RO','Recon','SG','FAST','DRO Mo'};
+    result_table(2,:)={'n',N_data,N_data,N_data,N_data,N_data};
+    result_table(3,:)={'n1',B_1,B_1,'-',N1_fast,'-'};
+    result_table(4,:)={'n2',B_2,B_2,'-',N2_fast,'-'};
+    result_table(5,:)={'ov',mean(fv_ro),mean(fv_recon),mean(fv_sg),mean(fv_fast),mean(fv_mo_dro)};
+    result_table(6,:)={'eps',mean(violation_ro),mean(violation_recon),mean(violation_sg),mean(violation_fast),mean(violation_mo_dro)};
+    result_table(7,:)={'delta',sum(violation_ro>delta)/n_outer,sum(violation_recon>delta)/n_outer,sum(violation_sg>delta)/n_outer,sum(violation_fast>delta)/n_outer,sum(violation_mo_dro>delta)/n_outer};
     disp('Results')
     disp(result_table)
         

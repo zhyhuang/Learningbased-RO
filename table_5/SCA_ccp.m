@@ -1,4 +1,4 @@
-function [x_SCA] = SCA_ccp(c,b,mu,rt_sigma,epsilon)
+function [x_SCA] = SCA_ccp(c,b,mu_0,rt_sigma,epsilon)
 %[x_SCA] = SCA_ccp(c,b,mu,rt_sigma,epsilon)
 % safe convex approximation
 phi_quantile=sqrt(2*log(1/epsilon));
@@ -8,7 +8,7 @@ cvx_begin
     minimize(c'*x_SCA)
     subject to
    
-    phi_quantile*norm(rt_sigma*x_SCA)-b+mu*x_SCA <= 0;
+    phi_quantile*norm(rt_sigma*x_SCA)-b+mu_0*x_SCA <= 0;
  
 cvx_end
 end
