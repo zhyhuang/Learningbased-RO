@@ -1,7 +1,7 @@
 clear
     d=11;                 % dimension
     m=15;                 % number of constraints
-    N_data=120;          % sample size
+    N_data=336;          % sample size
     n_outer=1000;        % outer test size
     delta=0.05;
     epsilon=0.05;
@@ -49,17 +49,20 @@ clear
     % parameters for data 
     A_tsps=A';
     mu_0=A_tsps(:)';
-    sigma=wishrnd(eye(A_r*A_c),5);
+    L=165;
+    A_l=[eye(d*m)*2+rand(d*m)*0.1; rand(L-d*m,d*m)]*100;
+    beta_dist_a=10;
+    beta_dist_b=10;
     
     % setting for RO and Recon
-    B_2=60;              % phase II budget
+    B_2=124;              % phase II budget
     B_1=N_data-B_2;      % phase I budget
     rank_of_data=binoinv(1-delta,B_2,1-epsilon); % estimated quantile
     rank_of_data_p1=binoinv(1-delta,B_1,1-epsilon); % estimated quantile for recon phase 1
 
     % setting for FAST
-    N1_fast=61;
-    N2_fast=59;
+    N1_fast=318;
+    N2_fast=18;
     x_fast_0=zeros(d,1);
     
     rng(123)
@@ -84,7 +87,18 @@ clear
     time_mo_dro=zeros(n_outer,1);
     
     for i=1:n_outer
-       dataset=mvnrnd(mu_0,sigma,N_data);
+        beta_rnd=betarnd(beta_dist_a,beta_dist_b,N_data,L)*2-1;
+
+        al_mat=zeros(N_data,d*m,L);
+            for l_i=1:L
+
+                al_mat(:,:,l_i)=beta_rnd(:,l_i)*A_l(l_i,:);
+
+            end
+
+        al_sum=sum(al_mat,3);
+        A1_mat=repmat(mu_0,N_data,1);
+       dataset=A1_mat+al_sum;
        %% FAST
        tic 
        dataset_fast_1=dataset(1:N1_fast,:);
@@ -124,8 +138,19 @@ clear
         
         
        %% violation test
-       test_data=mvnrnd(mu_0,sigma,N_test_data);
-        
+       beta_rnd_test=betarnd(beta_dist_a,beta_dist_b,N_test_data,L)*2-1;
+
+        al_mat_test=zeros(N_test_data,d*m,L);
+            for l_i_test=1:L
+
+                al_mat_test(:,:,l_i_test)=beta_rnd_test(:,l_i_test)*A_l(l_i_test,:);
+
+            end
+
+        al_sum_test=sum(al_mat_test,3);
+        A1_mat_test=repmat(mu_0,N_test_data,1);
+       test_data=A1_mat_test+al_sum_test;
+       
        violate_num_sg=0;
        violate_num_recon=0;
        violate_num_ro=0;

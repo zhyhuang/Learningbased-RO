@@ -25,7 +25,7 @@ clear
         6    18    15   14   14   0   0       0   10       0   0   ;
         16      0     0     12    35   50    50      0   50       0   20   ;
         20    0       10      36   50   0     0    50    50     0   0   ;
-        16     0      0       12   35  0     10     0     0     50    30];
+        16     0      0       12   35  0     10     0     0     50    30]/50;
 
     [A_r A_c]=size(A);
 
@@ -43,7 +43,7 @@ clear
          1200;
          1200;
          1200;
-         3600];
+         3600]/50;
      
      
     % parameters for data 
@@ -84,7 +84,7 @@ clear
     time_mo_dro=zeros(n_outer,1);
     
     for i=1:n_outer
-       dataset=mvnrnd(mu_0,sigma,N_data);
+       dataset=exp(mvnrnd(mu_0,sigma,N_data));
        %% FAST
        tic 
        dataset_fast_1=dataset(1:N1_fast,:);
@@ -124,8 +124,8 @@ clear
         
         
        %% violation test
-       test_data=mvnrnd(mu_0,sigma,N_test_data);
-        
+       test_data=exp(mvnrnd(mu_0,sigma,N_test_data));
+       
        violate_num_sg=0;
        violate_num_recon=0;
        violate_num_ro=0;

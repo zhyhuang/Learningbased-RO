@@ -1,6 +1,6 @@
 clear
     d=11;                 % dimension
-    m=1;                 % number of constraints
+    m=15;                 % number of constraints
     N_data=336;          % sample size
     n_outer=1000;        % outer test size
     delta=0.05;

@@ -1,7 +1,7 @@
 clear
     d=11;                 % dimension
     m=15;                 % number of constraints
-    N_data=120;          % sample size
+    N_data=336;          % sample size
     n_outer=1000;        % outer test size
     delta=0.05;
     epsilon=0.05;
@@ -50,16 +50,20 @@ clear
     A_tsps=A';
     mu_0=A_tsps(:)';
     sigma=wishrnd(eye(A_r*A_c),5);
+    [Cor_r,std_sigma]=corrcov(sigma+1*eye(d*m)); 
+    nu_t=5;
+    cov_mat=nu_t/(nu_t-2)*Cor_r;
+    real_mean=mu_0;
     
     % setting for RO and Recon
-    B_2=60;              % phase II budget
+    B_2=124;              % phase II budget
     B_1=N_data-B_2;      % phase I budget
     rank_of_data=binoinv(1-delta,B_2,1-epsilon); % estimated quantile
     rank_of_data_p1=binoinv(1-delta,B_1,1-epsilon); % estimated quantile for recon phase 1
 
     % setting for FAST
-    N1_fast=61;
-    N2_fast=59;
+    N1_fast=318;
+    N2_fast=18;
     x_fast_0=zeros(d,1);
     
     rng(123)
@@ -84,7 +88,7 @@ clear
     time_mo_dro=zeros(n_outer,1);
     
     for i=1:n_outer
-       dataset=mvnrnd(mu_0,sigma,N_data);
+       dataset=mvtrnd(Cor_r,nu_t,N_data)+repmat(mu_0,N_data,1);
        %% FAST
        tic 
        dataset_fast_1=dataset(1:N1_fast,:);
@@ -124,8 +128,8 @@ clear
         
         
        %% violation test
-       test_data=mvnrnd(mu_0,sigma,N_test_data);
-        
+       test_data=mvtrnd(Cor_r,nu_t,N_test_data)+repmat(mu_0,N_test_data,1);
+       
        violate_num_sg=0;
        violate_num_recon=0;
        violate_num_ro=0;
